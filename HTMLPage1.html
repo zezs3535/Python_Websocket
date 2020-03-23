@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script type="text/javascript">
+    var wsUri = "ws://IPADDR:PORT";
+    var websocket = new WebSocket(wsUri);
+    var output;
+
+    websocket.onopen = function (evt) {
+        websocket.send("Send Data(onopen)");
+    }
+
+    websocket.onmessage = function (msg) {
+        var output = document.getElementById("output");
+        var pre = document.createElement("p");
+        pre.style.wordWrap = "break-down";
+
+        pre.innerHTML = "<button><font color='red'>" + msg.data + "</font></button><br>"
+
+        output.appendChild(pre);
+    }
+    </script>
+</head>
+<body>
+    <h2>WebSocket Test</h2>
+    <div id="output">
+
+    </div>
+</body>
+
+</html>
