@@ -1,25 +1,30 @@
-import random
 import asyncio
+# 웹 소켓 모듈을 선언한다.
 import websockets
+import os
+import sys
 
-from time import sleep
+#기본경로
+os.chdir('/')
 
-async def SendMsg(websocket, path):
-    for x in range(0, 10):
-        rand_number = random.randint(1,1000)
-        sleep(0.5)
-        await websocket.send(str(rand_number))
-    await websocket.send(str("Done!"))
+# 클라이언트 접속이 되면 호출된다.
+async def accept(websocket, path):
+  file_list=os.listdir(os.getcwd())
+  await websocket.send("{}".format(file_list))
+  while True:
+    # 클라이언트로부터 메시지를 대기한다.
+    msg = await websocket.recv();
+    if msg=="exit":
+        sys.exit(1)
+    os.chdir(msg);
+    #print("receive : " + msg);
+    # 클라인언트로 echo를 붙여서 재 전송한다.
+    file_list=os.listdir(os.getcwd());
+    #print("{}".format(file_list));
+    await websocket.send("{}".format(file_list));
 
-async def main(websocket, path):
-    name = await websocket.recv()
-    print(f" {name}")
-
-    Send_ = asyncio.ensure_future(SendMsg(websocket, path))
-    print("Main Asyncio Start")
-    asyncio.as_completed(Send_)
-
-start_server = websockets.serve(main, "220.125.134.80", 8785)
-loop = asyncio.get_event_loop()
-loop.run_until_complete(start_server)
-loop.run_forever()
+# 웹 소켓 서버 생성.호스트는 localhost에 port는 9998로 생성한다.
+start_server = websockets.serve(accept, "172.30.2.29", 9999);
+# 비동기로 서버를 대기한다.
+asyncio.get_event_loop().run_until_complete(start_server);
+asyncio.get_event_loop().run_forever();
