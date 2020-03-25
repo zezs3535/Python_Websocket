@@ -24,7 +24,7 @@ async def accept(websocket, path):
     await websocket.send("{}".format(file_list));
 
 # 웹 소켓 서버 생성.호스트는 localhost에 port는 9998로 생성한다.
-start_server = websockets.serve(accept, "172.30.2.29", 9999);
+start_server = websockets.serve(accept, "IPADDR", PORT_NUM);
 # 비동기로 서버를 대기한다.
 asyncio.get_event_loop().run_until_complete(start_server);
 asyncio.get_event_loop().run_forever();
