@@ -19,7 +19,7 @@
   <textarea id="messageTextArea" rows="10" cols="50"></textarea>	
   <script type="text/javascript">	
     // 웹 서버를 접속한다.	
-    var webSocket = new WebSocket("ws://172.30.1.3:9997");	
+    var webSocket = new WebSocket("ws://172.30.1.89:9998");	
     // 웹 서버와의 통신을 주고 받은 결과를 출력할 오브젝트를 가져옵니다.	
     var messageTextArea = document.getElementById("messageTextArea");	
     // 소켓 접속이 되면 호출되는 함수	
@@ -42,8 +42,8 @@
     // 서버로 메시지를 전송하는 함수	
     function sendMessage(){	
 		var message = document.getElementById("textMessage");	
-		if(message.value=='make'){
-			ta.style.display='';
+		if(message.value[0]=='m'&&message.value[1]=='a'&&message.value[2]=='k'&&message.value[3]=='e'){	//명령어가 make일때
+			ta.style.display='';	//숨겨뒀던 텍스트창을 오픈
 			return;
 		}
 		messageTextArea.value += "Send to Server => "+message.value+"\n";	
