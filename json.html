@@ -1,6 +1,32 @@
 ﻿	
 <!DOCTYPE html>	
 <html>	
+<!-- <style>
+	#messageTextArea{
+		width:650px;
+		height:300px;
+		overflow-y:scroll;
+		overflow-x:hidden;
+		border: 1px solid black;
+		background-color:black;
+	}
+	ul{
+		list-style-type: none;
+		padding: 1px;
+		margin: 1px;
+	}
+	#messageTextArea.value{
+		color:white;
+		word-break:break-all;
+	}
+	#textMessage{
+		color:white;
+		background-color:black;
+		border:1px solid black;
+		margin: 0px;
+		padding: 0px;
+	}
+</style> -->
 <head>	
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">	
   <title>Insert title here</title>	
@@ -13,13 +39,15 @@
     <input onclick="sendMessage()" value="Send" type="button">	
     <!-- 접속 종료 버튼 -->	
     <input onclick="disconnect()" value="Disconnect" type="button">	
+	<!-- 제출 버튼 -->
+	<input onclick="makefile(ta)" value="Submit" type="button"></input>
   </form>	
   <br />	
   <!-- 출력 area -->	
-  <textarea id="messageTextArea" rows="10" cols="50"></textarea>	
+  <textarea id="messageTextArea" rows="20" cols="100" color="black"></textarea>	
   <script type="text/javascript">	
     // 웹 서버를 접속한다.	
-    var webSocket = new WebSocket("ws://172.30.1.89:9998");	
+    var webSocket = new WebSocket("ws://192.168.0.51:9998");	
     // 웹 서버와의 통신을 주고 받은 결과를 출력할 오브젝트를 가져옵니다.	
     var messageTextArea = document.getElementById("messageTextArea");	
     // 소켓 접속이 되면 호출되는 함수	
@@ -42,9 +70,43 @@
     // 서버로 메시지를 전송하는 함수	
     function sendMessage(){	
 		var message = document.getElementById("textMessage");	
-		if(message.value[0]=='m'&&message.value[1]=='a'&&message.value[2]=='k'&&message.value[3]=='e'){	//명령어가 make일때
+		if(message.value.split(" ")[0]=="make"){
 			ta.style.display='';	//숨겨뒀던 텍스트창을 오픈
+			// 테스트 구간
+			var msg = {
+				type : "fileName",
+				text : document.getElementById("textMessage").value
+			};
+			webSocket.send(JSON.stringify(msg));
+			// 테스트 구간
 			return;
+		}
+		else if(message.value.split(" ")[0]=="mkdir"){
+			var msg = {
+				type : "mkdir",
+				text : document.getElementById("textMessage").value.split(" ")[1]
+			};
+			webSocket.send(JSON.stringify(msg));
+			messageTextArea.value+= "Make "+message.value.split(" ")[1]+" directory\n";
+			return ;
+		}
+		else if(message.value.split(" ")[0]=="rmdir"){
+			var msg = {
+				type : "rmdir",
+				text : document.getElementById("textMessage").value.split(" ")[1]
+			};
+			webSocket.send(JSON.stringify(msg));
+			messageTextArea.value+= "Delete "+message.value.split(" ")[1]+" directory\n";
+			return ;
+		}
+		else if(message.value.split(" ")[0]=="remove"){
+			var msg = {
+				type : "remove",
+				text : document.getElementById("textMessage").value.split(" ")[1]
+			};
+			webSocket.send(JSON.stringify(msg));
+			messageTextArea.value+= "Delete "+message.value.split(" ")[1]+" directory\n";
+			return ;
 		}
 		messageTextArea.value += "Send to Server => "+message.value+"\n";	
       
@@ -83,6 +145,6 @@
 	<textarea id="ta" cols="30" rows="20" style=display:none onkeydown="if(event.keyCode==9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}"></textarea>
 	
 	<!-- submit 버튼을 누르면 textarea를 id값으로 'makefile(text)' 함수에 전달-->
-	<input onclick="makefile(ta)" value="Submit" type="button"></input>
+	
 </body>		
 </html>
