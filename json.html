@@ -47,7 +47,7 @@
   <textarea id="messageTextArea" rows="20" cols="100" color="black"></textarea>	
   <script type="text/javascript">	
     // 웹 서버를 접속한다.	
-    var webSocket = new WebSocket("ws://192.168.0.51:9998");	
+    var webSocket = new WebSocket("ws://localhost:9998");	
     // 웹 서버와의 통신을 주고 받은 결과를 출력할 오브젝트를 가져옵니다.	
     var messageTextArea = document.getElementById("messageTextArea");	
     // 소켓 접속이 되면 호출되는 함수	
@@ -106,6 +106,15 @@
 			};
 			webSocket.send(JSON.stringify(msg));
 			messageTextArea.value+= "Delete "+message.value.split(" ")[1]+" directory\n";
+			return ;
+		}
+		else if(message.value.split(" ")[0]=="copy"){
+			var msg = {
+				type : "copy",
+				text : document.getElementById("textMessage").value.split(" ")[1]
+			};
+			webSocket.send(JSON.stringify(msg));
+			messageTextArea.value+= "Copy "+message.value.split(" ")[1]+" directory\n";
 			return ;
 		}
 		messageTextArea.value += "Send to Server => "+message.value+"\n";	

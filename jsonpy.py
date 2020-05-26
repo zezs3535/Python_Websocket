@@ -5,6 +5,7 @@ import sys
 import asyncio
 import json
 import base64
+import shutil
 #기본경로
 os.chdir('/')
 ndir=nfile=0
@@ -29,6 +30,15 @@ ndir=nfile=0
 ##            print(prefix+'unknown object :',obj)
 
 # 클라이언트 접속이 되면 호출된다.
+def _copyfileobj(fsrc, fdst, length=16*1024*1024):
+    while 1:
+        buf=fsrc.read(length)
+        if not buf:
+            break
+        fdst.write(buf)
+
+shutil.copyfileobj=_copyfileobj
+
 async def accept(websocket, path): #코루틴함수 
     dirList=[]
     fileList=[]
@@ -55,6 +65,14 @@ async def accept(websocket, path): #코루틴함수
             fileName=msgText.split()[1]
             print("fileName = ",fileName)
 
+        elif msgType=="copy": #복사
+            targetName=msgText
+            try:
+                shutil.copyfileobj(os.getcwd()+ "\\"+targetName,os.getcwd()+ "\\copy_"+targetName)
+            except OSError as error:
+                print(error)
+                await websocket.send("{}{}".format(error,"같은 파일입니"))
+            
         elif msgType=="mkdir":      #디렉토리 생성
             dirName=msgText
             print("dirName = ",dirName)
@@ -95,7 +113,7 @@ async def accept(websocket, path): #코루틴함수
 
 if __name__=="__main__":
     # 웹 소켓 서버 생성.호스트는 localhost에 port는 9998로 생성한다.
-    start_server = websockets.serve(accept, "192.168.0.51", 9998);
+    start_server = websockets.serve(accept, "localhost", 9998);
     # 비동기로 서버를 대기한다.
     asyncio.get_event_loop().run_until_complete(start_server);
     asyncio.get_event_loop().run_forever();
