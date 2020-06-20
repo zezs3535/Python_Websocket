@@ -51,18 +51,10 @@
 	</style>
 	<script src ="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 	<script>
-	<!-- $(document).ready(function(){ -->
-		<!-- $(document).mousemove(function(event){ -->
-			<!-- $("span").text("X: "+event.pageX+ ", Y: "+event.pageY); -->
-		<!-- }); -->
-	<!-- }); -->
-	<!-- $(id).bind("contextmenu", function(event){ -->
-			<!-- event.preventDefault(); -->
-			<!-- $("<div class='custom-menu'>Custom menu</div>").appendTo("body") -->
-			<!-- .css({top: event.pageY+"px", left: event.pageX+"px", position: fixed}); -->
-			<!-- }).bind("click",function(event){ -->
-				<!-- $("div.custom-menu").remove(); -->
-		<!-- }); -->
+		
+		
+		var targetId="";
+		<!-- 클릭시 드롭다운 메뉴 출력 -->
 		$(document).ready(function(){
 		  //Show contextmenu:
 		  $(document).contextmenu(function(e){
@@ -111,7 +103,42 @@
 		  $(document).click(function(){
 			$(".contextmenu").hide();
 		  });
+		  $("#remove").click(function(){
+			sendMessage("remove",targetId);
+			alert(targetId+" deleted");
+		  });
+		  
+		  $("#namemodify").click(function(){
+			var inputString = prompt("바꿀 이름을 입력하세요");
+			sendMessageChangeName("namemodify",targetId,inputString);
+		  });
+		  
+		  $("#copy").click(function(){
+			sendMessage("copy",targetId);
+			alert(targetId+" copied");
+		  });
+		  //입력창 -> 입력한 값 받아서 서버로 전송 -> 처리 후 컴컴
+		  $("#modify").click(function(){
+			sendMessage("modify",targetId);	
+		  });
 		});
+		function textAreaOpen(text){
+			var background = document.getElementById("ta");
+			background.style.display='';
+			background.innerHTML=text;
+		}
+		<!-- function modalOpen(text){ -->
+			<!-- var background = document.getElementById("background"); -->
+			<!-- var popup = document.getElementById("popup"); -->
+			<!-- background.style.display=''; -->
+			<!-- popup.style.display=''; -->
+			<!-- document.getElementById("EMP_NM").innerHTML=text; -->
+		<!-- } -->
+		<!-- function modalclose(){ -->
+			<!-- document.getElementById("popup").style.display='none'; -->
+			<!-- document.getElementById("background").style.display='none'; -->
+			<!-- document.getElementById("EMP_NM").style.display=''; -->
+		<!-- } -->
 		var ws=0;
 		var ws_text=0;
 		var ip="";
@@ -152,7 +179,7 @@
 				// ex) {"kinds": "directory", "list": ["All Users", "Default", "Default User", "Public", "rudwn"]}
 				
 				var parsed_data = JSON.parse(message.data);
-				
+				//alert(parsed_data.kinds, parsed_data.text);
 				//JSON 데이터의 kinds가 디렉토리이면
 				if(parsed_data.kinds==="directory"){
 					make_div(parsed_data.list, "directory");
@@ -160,20 +187,13 @@
 				else if(parsed_data.kinds==="filelist"){
 					make_div(parsed_data.list, "file");
 				}
+				else if(parsed_data.kinds==="modify"){
+					textAreaOpen(parsed_data.text);
+					//alert(parsed_data.text);
+					<!-- modalOpen(parsed_data.text); -->
+				}
 			};
 
-			//text용 웹소켓 서버로 메시지를 전송하는 함수
-			/* send를 하면 146번째의 send Message가 실행되어서 주석처리
-			function sendMessage(event){
-				var message = document.getElementById("textMessage").value;
-				alert(60);
-				//message 전송
-				ws_text.send(message);
-	
-				// textMessage객체의 값을 초기화
-				document.getElementById("textMessage").value = "";
-			};
-			*/
 			function disconnect(){
 				ws_text.close();
 			}
@@ -198,7 +218,7 @@
 
 			//웹소켓 생성(ip주소 및 포트 설정)
 			//파일 보내는 전용
-			//var ws = new WebSocket("ws://192.168.252.1:8080");
+			//var ws = new WebSocket("ws://192.168.0.82:8080");
 			console.log("ws://"+ip+":"+port);
 			var ws = new WebSocket("ws://"+ip+":"+port);
 
@@ -235,9 +255,6 @@
 		};
 
 
-		//text용 웹소켓 생성
-		//var ws_text = new WebSocket("ws://192.168.252.1:8081");
-
 		//text용 웹소켓이 끝나면 호출되는 함수
 		ws_text.onclose=function(message){
 			alert('disconnected');
@@ -262,11 +279,28 @@
 			//message 전송
 			ws_text.send(json_msg);
 		};
-
+		function sendMessageChangeName(kind, src, dst){
+			var msg ={
+				kinds : kind,
+				text : src,
+				text2 : dst
+			};
+			json_msg = JSON.stringify(msg);
+			ws_text.send(json_msg);
+		}
 		function disconnect(){
 			ws_text.close();
 		}
-		
+		function makefile(text){
+			var msg = {
+				kinds : "modify2",
+				text : text.value
+			};
+			ws_text.send(JSON.stringify(msg));
+			text.value='';
+			ta.style.display='none';
+			alert("Modified Successfully");
+		}
 		//파일과 딕렉토리 div를 동적 생성
 		//list에는 파일 배열 또는 디렉토리 배열
 		//kinds에는 file 또는 directory
@@ -295,22 +329,13 @@
 				
 				newDiv.appendChild(childDiv);
 				newDiv.id = list[i]+"";
+				newDiv.oncon
 				//newDiv.style.backgroundColor = "yellow";
 				newDiv.style.height = "250px";
 				newDiv.style.width = "250px";
-				/*
+				
 				newDiv.onclick= function(){
-					var p = this.parentElement;
-					alert(this.id);
 					sendMessage("chdir", this.id);
-					p.removeChild(this);
-				};
-				*/
-				newDiv.onclick= function(){
-					//var p = this.parentElement;
-					//alert(this.id);
-					sendMessage("chdir", this.id);
-					//p.removeChild(this);
 
 					//파일, 디렉토리가 나타나는 div id 가 list인데,
 					//이 list의 Child(파일, 디렉토리)를 모두 제거
@@ -320,9 +345,20 @@
 						p.removeChild(p.firstChild);
 					}
 				};
+				newDiv.addEventListener("auxclick",function(){
+					targetId=this.id;
+				});
 				par.appendChild(newDiv);
 			}
 		}
+		<!-- function remove(){ -->
+			<!-- $('.div').click(function(){ -->
+				<!-- var id_check=$(this).attr("id"); -->
+				<!-- sendMessage("remove",id_check); -->
+			<!-- } -->
+			<!-- sendMessage("remove",this.id); -->
+		<!-- } -->
+
 	</script>
 </head>
 <body>
@@ -330,7 +366,7 @@
 	<input id="ipArea" type="text" placeholder="ip address"></input>
 	<input id="portArea" type="text" placeholder="port number"></input>
 	-->
-	<input id="ipArea" type="text" value="192.168.1.14"></input>
+	<input id="ipArea" type="text" value="192.168.0.189"></input>
 	<input id="portArea" type="text" value="8080"></input>
 	<button id="connect_btn" onclick="ws_connect()">Connect</button>
 	<br/>
@@ -340,13 +376,16 @@
 	<form>
 		<!-- 접속 종료 버튼 -->
 		<input onclick="disconnect()" value="Disconnect" type="button">
+		<input onclick="makefile(ta)" value="Submit" type="button"></input>
 	</form>
+	<textarea id="ta" rows="20" cols="30" style="display:none;"></textarea>
 
+	<!-- 우클릭 시 나오는 드롭다운 메뉴 -->
 	<ul class="contextmenu">
-		<li><a href="#">Remove</a></li>
-		<li><a href="#">Copy</a></li>
-		<li><a href="#">Modify</a></li>
-		<li><a href="#">NameModify</a></li>
+		<li><a id="remove" href="#">Remove</a></li>
+		<li><a id="copy" href="#">Copy</a></li>
+		<li><a id="modify" href="#">Modify</a></li>
+		<li><a id="namemodify" href="#">NameModify</a></li>
 	</ul>
 	<!-- 파일 div들이 생성될 list div -->
 	<div id="list" style="background-color: ivory">

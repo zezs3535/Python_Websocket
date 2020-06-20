@@ -9,10 +9,20 @@ import sys;
 import json;
 import shutil
 import string
+import pickle
 #기본 경로
 #os.chdir('D:')
 #os.chdir('/')
 ndir=nfile=0
+fileName='';
+##def _copyfileobj(fsrc, fdst, length=16*1024*1024):
+##    while 1:
+##        buf=fsrc.read(length)
+##        if not buf:
+##            break
+##        fdst.write(buf)
+##
+##shutil.copyfileobj=_copyfileobj
 
 # 업로드 할 때 데이터 정보에 관한 클래스
 class Node():
@@ -105,15 +115,7 @@ async def file_accept(websocket, path):
 async def text_accept(websocket, path):
     available_drives = ['%s:' % d for d in string.ascii_uppercase if os.path.exists('%s:' % d)]
     print(available_drives)
-    #allList=os.listdir(os.getcwd())
-    #print(allList)
-    #dirList=['.', '..']
-    #fileList=[]
-    #for i in os.listdir():
-    #    if os.path.isfile(i):
-    #        fileList.append(i)
-    #    else:
-    #        dirList.append(i)
+    
     json_dirList = json.dumps({"kinds": "directory", "list": available_drives})
 
     #드라이블 경로로 가기 위해서는 C: 이 아닌 C:\ 이렇게 필요해서 끝에 \를 붙여줌
@@ -122,21 +124,24 @@ async def text_accept(websocket, path):
         print(available_drives[i])
         
     
-    #json_fileList = json.dumps({"kinds": "filelist", "list": fileList})
-    #await websocket.send("{}".format(dirList))
     await websocket.send("{}".format(json_dirList))
-    #await websocket.send("{}".format(json_fileList))
+    
     while True:
         #클라이언트가 'send'버튼으로 text를 전송할 때까지 대기
         data = await websocket.recv();#받는 데이터는 json형태(kinds, text)
         json_data = json.loads(data)#받은 데이터를 json으로 변환
-
+        print(json_data)
+        #..디렉토리 클릭
         if json_data['kinds']=='chdir' and json_data['text']=='..' and os.getcwd() in available_drives :
             json_dirList = json.dumps({"kinds": "directory", "list": available_drives})
             await websocket.send("{}".format(json_dirList))
+
+        #다른 디렉토리 클릭
         elif json_data['kinds']=='chdir':
-            #print(type(json_data['text']))
+            if os.path.isfile(json_data['text']):
+                break
             print(os.getcwd())
+            beforeLink=os.getcwd()
             os.chdir(json_data['text']+'\\')
             dirList=['..']
             fileList=[]
@@ -149,11 +154,44 @@ async def text_accept(websocket, path):
             json_dirList = json.dumps({"kinds": "directory", "list": dirList})
             json_fileList = json.dumps({"kinds": "filelist", "list": fileList})
             await websocket.send("{}".format(json_dirList));
-            await websocket.send("{}".format(json_fileList));
-          
-        #print("received : " + data);
+            await websocket.send("{}".format(json_fileList));            
+                
         
+        #파일 제거
+        elif json_data['kinds']=='remove':
+            fileName=json_data['text']
+            os.remove(fileName)
 
+        #이름 변경
+        elif json_data['kinds']=='namemodify':
+            srcName=json_data['text']
+            dstName=json_data['text2']
+            os.rename(srcName,dstName)
+
+        elif json_data['kinds']=='modify':
+            #json_data['text']=json.dumps({"kinds": "modify"})
+            fileName=json_data['text']
+            f=open(fileName,mode='rt',encoding='utf-8')
+            text=json.dumps({"kinds":"modify","text":f.read()})
+            await websocket.send("{}".format(text))
+            f.close()
+
+        elif json_data['kinds']=='modify2':
+            fd=os.open(fileName,os.O_CREAT|os.O_RDWR)
+            os.write(fd,bytes(json_data['text'],encoding='utf8'))
+            print('{}'.format(json_data['text']))
+            
+
+        #복사
+##        elif json_data['kinds']=='copy':
+##            targetName=json_data['text']
+##            
+##            print(targetName)
+##            try:
+##                shutil.copyfileobj(os.getcwd()+ "\\"+targetName,os.getcwd()+ "\\copy_"+targetName)
+##            except OSError as error:
+##                print(error)
+##                await websocket.send("{}{}".format(error,"같은 파일입니다"))
 def network_info():
     host = socket.gethostname()
     ip_addr = socket.gethostbyname(host)
@@ -167,7 +205,7 @@ ip = network_info()
 # 파일 전송용 웹 소켓 서버 생성.호스트는 localhost에 port는 8080으로 생성한다.
 start_server = websockets.serve(file_accept, ip, 8080);
 
-# 파일 전송용이 아닌 웹 소켓 서버 성생. 호스트는 localhost에 port는 8081로 생성
+# 파일 전송용이 아닌 웹 소켓 서버 생성. 호스트는 localhost에 port는 8081로 생성
 start_server_text = websockets.serve(text_accept,  ip, 8081);
 
 # 비동기로 서버를 대기한다.   
