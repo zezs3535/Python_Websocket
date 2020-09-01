@@ -51,7 +51,8 @@
 	</style>
 	<script src ="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 	<script>
-		
+		const localParent='';
+		const localChild='';
 		
 		var targetId="";
 		<!-- 클릭시 드롭다운 메뉴 출력 -->
@@ -106,6 +107,10 @@
 		  $("#remove").click(function(){
 			sendMessage("remove",targetId);
 			alert(targetId+" deleted");
+			var p = document.getElementById('list');
+				while(p.firstChild){
+					p.removeChild(p.firstChild);
+				}
 		  });
 		  $("#filecopy").click(function(){
 			sendMessage("copy",targetId);
@@ -113,15 +118,27 @@
 		  $("#filepaste").click(function(){
 			sendMessage("paste","temp");
 			alert(targetId+" copied");
+			var p = document.getElementById('list');
+				while(p.firstChild){
+					p.removeChild(p.firstChild);
+				}
 		  });
 		  $("#namemodify").click(function(){
 			var inputString = prompt("바꿀 이름을 입력하세요");
 			sendMessageChangeName("namemodify",targetId,inputString);
+			var p = document.getElementById('list');
+				while(p.firstChild){
+					p.removeChild(p.firstChild);
+				}
 		  });
 		  
 		  //입력창 -> 입력한 값 받아서 서버로 전송 -> 처리 후 컴컴
 		  $("#modify").click(function(){
-			sendMessage("modify",targetId);	
+			sendMessage("modify",targetId);
+			var p = document.getElementById('list');
+				while(p.firstChild){
+					p.removeChild(p.firstChild);
+				}
 		  });
 
 		  //우클릭 메뉴에서 MakeTextFile 클릭
@@ -140,6 +157,10 @@
 			//cancel 버튼 보이게 하기
 			document.getElementById("cancel").style.display='';
 			//sendMessage("maketextfile", targetId);
+			var p = document.getElementById('list');
+				while(p.firstChild){
+					p.removeChild(p.firstChild);
+				}
 		  });
 		  $("#makedir").click(function(){
 			var makedirnamearea = document.getElementById("makedirname");
@@ -149,12 +170,19 @@
 			makebtn.style.display='';
 			
 			document.getElementById("canceldir").style.display='';
+			var p = document.getElementById('list');
+				while(p.firstChild){
+					p.removeChild(p.firstChild);
+				}
 		  });
+		  <!-- $("#submit").click(function(){ -->
+			<!-- $("#list").load(location.href+"#list"); -->
+		  <!-- }); -->
 		});
-		function textAreaOpen(text){
+		function textAreaOpen(fileText){
 			var background = document.getElementById("ta");
 			background.style.display='';
-			background.innerHTML=text;
+			background.innerHTML=fileText;
 		}
 		var ws=0;
 		var ws_text=0;
@@ -164,6 +192,10 @@
 		var fileList = new Array();
 		function ws_connect(){
 			//text_port 는 입력된 port보다 1이 크다
+			var p = document.getElementById('list');
+				while(p.firstChild){
+					p.removeChild(p.firstChild);
+				}
 			ip = document.getElementById('ipArea').value;
 			port = document.getElementById('portArea').value;
 			text_port = port*1;
@@ -197,6 +229,7 @@
 				var parsed_data = JSON.parse(message.data);
 				//alert(parsed_data.kinds, parsed_data.text);
 				//JSON 데이터의 kinds가 디렉토리이면
+				
 				if(parsed_data.kinds==="directory"){
 					make_div(parsed_data.list, "directory");
 				}
@@ -205,8 +238,6 @@
 				}
 				else if(parsed_data.kinds==="modify"){
 					textAreaOpen(parsed_data.text);
-					//alert(parsed_data.text);
-					<!-- modalOpen(parsed_data.text); -->
 				}
 			};
 
@@ -310,7 +341,7 @@
 		function makefile(text){
 			var msg = {
 				kinds : "modify2",
-				text : text.value
+				texts : text.value
 			};
 			ws_text.send(JSON.stringify(msg));
 			text.value='';
@@ -332,6 +363,7 @@
 				}
 				
 				var par = document.getElementById("list");
+				
 				var newDiv = document.createElement("div");
 
 				var childDiv = document.createElement("div");
@@ -345,14 +377,12 @@
 				
 				newDiv.appendChild(childDiv);
 				newDiv.id = list[i]+"";
-				newDiv.oncon
-				//newDiv.style.backgroundColor = "yellow";
+				newDiv.oncon;
 				newDiv.style.height = "250px";
 				newDiv.style.width = "250px";
 				
 				newDiv.onclick= function(){
 					sendMessage("chdir", this.id);
-
 					//파일, 디렉토리가 나타나는 div id 가 list인데,
 					//이 list의 Child(파일, 디렉토리)를 모두 제거
 					//하는 반복문
@@ -367,14 +397,7 @@
 				par.appendChild(newDiv);
 			}
 		}
-		/*function remove(){ -->
-			<!-- $('.div').click(function(){ -->
-				<!-- var id_check=$(this).attr("id"); -->
-				<!-- sendMessage("remove",id_check); -->
-			<!-- } -->
-			<!-- sendMessage("remove",this.id); -->
-		<!-- } -->*/
-
+		
 		function sendmakefile(){
 			if(document.getElementById("makefilenamearea").value==''){
 				alert('file name is null');

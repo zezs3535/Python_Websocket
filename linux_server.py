@@ -13,6 +13,7 @@ import string
 #os.chdir('D:')
 os.chdir('/')
 ndir=nfile=0
+make_file_name=''
 
 # 업로드 할 때 데이터 정보에 관한 클래스
 class Node():
@@ -68,7 +69,7 @@ class Node():
     # 파일전송이 끝났는지 확인하는 함수
     def is_completed(self):
         if self.__filesize == self.__datasize:
-            print('transfering finished')
+            print('Transfer is finished')
             return True;
         else:
             return False;
@@ -119,14 +120,17 @@ async def text_accept(websocket, path):
         available_drives[i] = available_drives[i] + '\\'
         print(available_drives[i])
     #Windows Version
-    curLink=0
+        
+    
     await websocket.send("{}".format(json_dirList))
+    global fileName
+    global curLink
     while True:
         #클라이언트가 'send'버튼으로 text를 전송할 때까지 대기
         data = await websocket.recv();#받는 데이터는 json형태(kinds, text)
-        #print("data")
+        
         json_data = json.loads(data)#받은 데이터를 json으로 변환
-        #print(json_data)
+        
         #..디렉토리 클릭
         if json_data['kinds']=='chdir' and json_data['text']=='..' and os.getcwd() in available_drives :
             json_dirList = json.dumps({"kinds": "directory", "list": available_drives})
@@ -136,14 +140,14 @@ async def text_accept(websocket, path):
         elif json_data['kinds']=='chdir':
             if os.path.isfile(json_data['text']):
                 break
+
             #Linux Version
             #os.chdir(json_data['text']+'/')
             #Linux Version
-
             #Windows Version
             os.chdir(json_data['text']+'\\')
             #Windows Version
-                
+            curLink=json_data['text']+'\\'
             #print(os.getcwd())
             dirList=['..']
             fileList=[]
@@ -168,29 +172,107 @@ async def text_accept(websocket, path):
             elif os.path.isdir(targetName):
                 item=os.path.join(dirPath,targetName)
                 shutil.rmtree(item)
+                
+            #update
+            os.chdir('..')
+            os.chdir(dirPath)
+            #Windows Version
+
+            #print(os.getcwd())
+            dirList=['..']
+            fileList=[]
+            for i in os.listdir():
+                if os.path.isfile(i):
+                    fileList.append(i)
+                else:
+                    dirList.append(i)
+
+            json_dirList = json.dumps({"kinds": "directory", "list": dirList})
+            json_fileList = json.dumps({"kinds": "filelist", "list": fileList})
+            await websocket.send("{}".format(json_dirList));
+            await websocket.send("{}".format(json_fileList));
+            #update
 
         #이름 변경
         elif json_data['kinds']=='namemodify':
             srcName=json_data['text']
             dstName=json_data['text2']
             os.rename(srcName,dstName)
+            #update
+            curLink=os.getcwd()
+            os.chdir('..')
+            os.chdir(curLink)
+            #Windows Version
+
+            dirList=['..']
+            fileList=[]
+            for i in os.listdir():
+                if os.path.isfile(i):
+                    fileList.append(i)
+                else:
+                    dirList.append(i)
+
+            json_dirList = json.dumps({"kinds": "directory", "list": dirList})
+            json_fileList = json.dumps({"kinds": "filelist", "list": fileList})
+            await websocket.send("{}".format(json_dirList));
+            await websocket.send("{}".format(json_fileList));
+            #update
 
         elif json_data['kinds']=='modify':
-            #json_data['text']=json.dumps({"kinds": "modify"})
             fileName=json_data['text']
-            f=open(fileName,mode='rt',encoding='utf-8')
-            text=json.dumps({"kinds":"modify","text":f.read()})
-            await websocket.send("{}".format(text))
+            f=open(fileName,mode='r+',encoding='utf-8')
+            texts=json.dumps({"kinds":"modify","text":f.read()})
+            await websocket.send("{}".format(texts));
             f.close()
 
         elif json_data['kinds']=='modify2':
             fd=os.open(fileName,os.O_CREAT|os.O_RDWR)
-            os.write(fd,bytes(json_data['text'],encoding='utf8'))
-            print('{}'.format(json_data['text']))
+            os.write(fd,bytes(json_data['texts'],encoding='utf8'))
+            print('{}'.format(json_data['texts']))
+            os.close(fd)
+            
+            #update
+            curLink=os.getcwd()
+            os.chdir('..')
+            os.chdir(curLink)
+            #Windows Version
+
+            dirList=['..']
+            fileList=[]
+            for i in os.listdir():
+                if os.path.isfile(i):
+                    fileList.append(i)
+                else:
+                    dirList.append(i)
+
+            json_dirList = json.dumps({"kinds": "directory", "list": dirList})
+            json_fileList = json.dumps({"kinds": "filelist", "list": fileList})
+            await websocket.send("{}".format(json_dirList));
+            await websocket.send("{}".format(json_fileList));
+            #update
 
         elif json_data['kinds']=='makedir':
             make_dir_name = json_data['text']
             os.mkdir(os.getcwd()+ "\\"+make_dir_name+ "\ ")
+            #update
+            curLink=os.getcwd()
+            os.chdir('..')
+            os.chdir(curLink)
+            #Windows Version
+
+            dirList=['..']
+            fileList=[]
+            for i in os.listdir():
+                if os.path.isfile(i):
+                    fileList.append(i)
+                else:
+                    dirList.append(i)
+
+            json_dirList = json.dumps({"kinds": "directory", "list": dirList})
+            json_fileList = json.dumps({"kinds": "filelist", "list": fileList})
+            await websocket.send("{}".format(json_dirList));
+            await websocket.send("{}".format(json_fileList));
+            #update
             
         #파일 생성
         elif json_data['kinds'] == 'makename':
@@ -210,6 +292,26 @@ async def text_accept(websocket, path):
                 make_file_name=''
                 make_file_text=''
 
+            #update
+            curLink=os.getcwd()
+            os.chdir('..')
+            os.chdir(curLink)
+            #Windows Version
+
+            dirList=['..']
+            fileList=[]
+            for i in os.listdir():
+                if os.path.isfile(i):
+                    fileList.append(i)
+                else:
+                    dirList.append(i)
+
+            json_dirList = json.dumps({"kinds": "directory", "list": dirList})
+            json_fileList = json.dumps({"kinds": "filelist", "list": fileList})
+            await websocket.send("{}".format(json_dirList));
+            await websocket.send("{}".format(json_fileList));
+            #update
+
         #파일 복사
         elif json_data['kinds']=='copy':
             targetName=json_data['text']
@@ -219,7 +321,28 @@ async def text_accept(websocket, path):
         #파일 붙여넣기
         elif json_data['kinds']=='paste':
             print(targetLink, targetName)
-            shutil.copy(targetLink+"\\"+targetName,os.getcwd()+ "\\copy_"+targetName)            
+            shutil.copy(targetLink+"\\"+targetName,os.getcwd()+ "\\copy_"+targetName)
+
+            #update
+            curLink=os.getcwd()
+            os.chdir('..')
+            os.chdir(curLink)
+            #Windows Version
+
+            dirList=['..']
+            fileList=[]
+            for i in os.listdir():
+                if os.path.isfile(i):
+                    fileList.append(i)
+                else:
+                    dirList.append(i)
+
+            json_dirList = json.dumps({"kinds": "directory", "list": dirList})
+            json_fileList = json.dumps({"kinds": "filelist", "list": fileList})
+            await websocket.send("{}".format(json_dirList));
+            await websocket.send("{}".format(json_fileList));
+            #update
+            
 def network_info():
     host = socket.gethostname()
     ip_addr = socket.gethostbyname(host)
