@@ -342,6 +342,20 @@ async def text_accept(websocket, path):
             await websocket.send("{}".format(json_dirList));
             await websocket.send("{}".format(json_fileList));
             #update
+
+        elif json_data['kinds']=='cancel':
+            dirList=['..']
+            fileList=[]
+            for i in os.listdir():
+                if os.path.isfile(i):
+                    fileList.append(i)
+                else:
+                    dirList.append(i)
+
+            json_dirList = json.dumps({"kinds": "directory", "list": dirList})
+            json_fileList = json.dumps({"kinds": "filelist", "list": fileList})
+            await websocket.send("{}".format(json_dirList));
+            await websocket.send("{}".format(json_fileList));
             
 def network_info():
     host = socket.gethostname()

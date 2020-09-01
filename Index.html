@@ -132,15 +132,6 @@
 				}
 		  });
 		  
-		  //입력창 -> 입력한 값 받아서 서버로 전송 -> 처리 후 컴컴
-		  $("#modify").click(function(){
-			sendMessage("modify",targetId);
-			var p = document.getElementById('list');
-				while(p.firstChild){
-					p.removeChild(p.firstChild);
-				}
-		  });
-
 		  //우클릭 메뉴에서 MakeTextFile 클릭
 		  $("#maketextfile").click(function(){
 			//textArea 보이게 하기
@@ -175,9 +166,6 @@
 					p.removeChild(p.firstChild);
 				}
 		  });
-		  <!-- $("#submit").click(function(){ -->
-			<!-- $("#list").load(location.href+"#list"); -->
-		  <!-- }); -->
 		});
 		function textAreaOpen(fileText){
 			var background = document.getElementById("ta");
@@ -191,6 +179,9 @@
 		var dirList = new Array();
 		var fileList = new Array();
 		function ws_connect(){
+			document.getElementById("connect_btn").style.display='none';
+			document.getElementById("ipArea").style.display='none';
+			document.getElementById("portArea").style.display='none';
 			//text_port 는 입력된 port보다 1이 크다
 			var p = document.getElementById('list');
 				while(p.firstChild){
@@ -347,11 +338,12 @@
 			text.value='';
 			ta.style.display='none';
 			alert("Modified Successfully");
+			document.getElementById("savebtn").style.display='none';
 		}
 		//파일과 딕렉토리 div를 동적 생성
 		//list에는 파일 배열 또는 디렉토리 배열
 		//kinds에는 file 또는 directory
-		//kinds가 file이면 그림은 file.png 이고, directory이면 그림이 direcrory.png
+		//kinds가 file이면 그림은 file.png 이고, directory이면 그림이 directory.png
 		function make_div(list, kinds){
 			for(var i=0; i<list.length; i++){
 				var img = document.createElement('img');
@@ -377,19 +369,26 @@
 				
 				newDiv.appendChild(childDiv);
 				newDiv.id = list[i]+"";
-				newDiv.oncon;
+				newDiv.atr;
 				newDiv.style.height = "250px";
 				newDiv.style.width = "250px";
-				
+				newDiv.atr=kinds;
 				newDiv.onclick= function(){
-					sendMessage("chdir", this.id);
-					//파일, 디렉토리가 나타나는 div id 가 list인데,
-					//이 list의 Child(파일, 디렉토리)를 모두 제거
-					//하는 반복문
-					var p = document.getElementById('list');
-					while(p.firstChild){
-						p.removeChild(p.firstChild);
+					if(newDiv.atr=="directory"){
+						sendMessage("chdir", this.id);
+						//파일, 디렉토리가 나타나는 div id 가 list인데,
+						//이 list의 Child(파일, 디렉토리)를 모두 제거
+						//하는 반복문
 					}
+					else if(newDiv.atr==="file"){
+						sendMessage("modify",this.id);
+						document.getElementById("savebtn").style.display='';
+						document.getElementById("modifycancelbtn").style.display='';
+					}
+					var p = document.getElementById('list');
+						while(p.firstChild){
+							p.removeChild(p.firstChild);
+						}
 				};
 				newDiv.addEventListener("auxclick",function(){
 					targetId=this.id;
@@ -410,8 +409,13 @@
 			document.getElementById("makefilenamearea").value = "";
 			document.getElementById("makefilenamearea").style.display='none';
 			document.getElementById("makebtn").style.display='none';
+			document.getElementById("cancel").style.display='none';
 			document.getElementById("ta").value="";
 			document.getElementById("ta").style.display='none';
+			var p = document.getElementById('list');
+				while(p.firstChild){
+					p.removeChild(p.firstChild);
+				}
 		};
 
 		function makingfilecancel(){
@@ -421,6 +425,7 @@
 			document.getElementById("ta").value="";
 			document.getElementById("ta").style.display='none';
 			document.getElementById("cancel").style.display='none';
+			sendMessage("cancel","temp");
 		};
 		function sendmakedir(){
 			if(document.getElementById("makedirname").value==''){
@@ -431,15 +436,30 @@
 			sendMessage("makedir", document.getElementById("makedirname").value);
 			document.getElementById("makedirname").value = "";
 			document.getElementById("makedirname").style.display='none';
-			document.getElementById("makebtn").style.display='none';
+			document.getElementById("makebtndir").style.display='none';
+			document.getElementById("canceldir").style.display='none';
+			var p = document.getElementById('list');
+				while(p.firstChild){
+					p.removeChild(p.firstChild);
+				}
 		}
 
 		function makingdircancel(){
 			document.getElementById("makedirname").value = "";
 			document.getElementById("makedirname").style.display='none';
-			document.getElementById("makebtn").style.display='none';
-			document.getElementById("cancel").style.display='none';
+			document.getElementById("makebtndir").style.display='none';
+			document.getElementById("canceldir").style.display='none';
+			sendMessage("cancel","temp");
 		}
+		
+		function modifingfilecancel(){
+			document.getElementById("savebtn").style.display='none';
+			document.getElementById("modifycancelbtn").style.display='none';
+			document.getElementById("ta").value="";
+			document.getElementById("ta").style.display='none';
+			sendMessage("cancel","temp");
+		}
+		
 	</script>
 </head>
 <body>
@@ -458,7 +478,7 @@
 	<form>
 		<!-- 접속 종료 버튼 -->
 		<input onclick="disconnect()" value="Disconnect" type="button">
-		<input onclick="makefile(ta)" value="Submit" type="button"></input>
+		
 	</form>
 
 	<textarea id="ta" rows="20" cols="30" style="display:none;" onkeydown="if(event.keyCode==9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}"></textarea>
@@ -475,11 +495,12 @@
 		<input id="makebtndir" onclick="sendmakedir()" value="Make" style="display:none;" type="button"></input>
 		<input id="canceldir" onclick="makingdircancel()" value="Cancel" style="display:none;" type="button"></input>
 	</form>
+	<input id="savebtn" onclick="makefile(ta)" value="Save" style="display:none;" type="button"></input>
+	<input id="modifycancelbtn" onclick="modifingfilecancel()" value="Cancel" style="display:none;" type="button"></input>
 	<!-- 우클릭 시 나오는 드롭다운 메뉴 -->
 	<ul class="contextmenu">
 		<li><a id="makedir" href="#">MakeDir</a></li>
 		<li><a id="maketextfile" href="#">MakeTextFile</a></li>
-		<li><a id="modify" href="#">Modify</a></li>
 		<li><a id="namemodify" href="#">NameModify</a></li>
 		<li><a id="remove" href="#">Remove</a></li>
 		<li><a id="filecopy" href="#">Copy</a></li>
