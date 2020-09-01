@@ -226,10 +226,10 @@ async def text_accept(websocket, path):
             f.close()
 
         elif json_data['kinds']=='modify2':
-            fd=os.open(fileName,os.O_CREAT|os.O_RDWR)
-            os.write(fd,bytes(json_data['texts'],encoding='utf8'))
+            fd=open(fileName,mode='w+',encoding='utf-8')
+            fd.write(json_data['texts'])
             print('{}'.format(json_data['texts']))
-            os.close(fd)
+            fd.close()
             
             #update
             curLink=os.getcwd()
