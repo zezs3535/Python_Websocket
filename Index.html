@@ -179,9 +179,7 @@
 		var dirList = new Array();
 		var fileList = new Array();
 		function ws_connect(){
-			document.getElementById("connect_btn").style.display='none';
-			document.getElementById("ipArea").style.display='none';
-			document.getElementById("portArea").style.display='none';
+			
 			//text_port 는 입력된 port보다 1이 크다
 			var p = document.getElementById('list');
 				while(p.firstChild){
@@ -196,10 +194,9 @@
 		
 			//text용 웹소켓이 접속되면 접속되는 함수
 			ws_text.onopen = function(message){
-				alert('connected 2');
+				alert('connected');
 			};
-
-			//text용 웹소켓이 끝나면 호출되는 함수
+			
 			ws_text.onclose=function(message){
 				alert('disconnected');
 				
@@ -235,6 +232,7 @@
 			function disconnect(){
 				ws_text.close();
 			}
+
 		}
 
 		function upload(){
@@ -339,6 +337,7 @@
 			ta.style.display='none';
 			alert("Modified Successfully");
 			document.getElementById("savebtn").style.display='none';
+			document.getElementById("modifycancelbtn").style.display='none';
 		}
 		//파일과 딕렉토리 div를 동적 생성
 		//list에는 파일 배열 또는 디렉토리 배열
@@ -459,7 +458,6 @@
 			document.getElementById("ta").style.display='none';
 			sendMessage("cancel","temp");
 		}
-		
 	</script>
 </head>
 <body>

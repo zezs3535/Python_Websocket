@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8"/>
+    <title>Login</title>
+	<style>
+		*{margin: 0; padding: 0;}
+		.loginbox{width:330px; height:320px; border:1px solid #ccc; margin: 200px auto; padding: 25px 15px; box-sizing: border-box;}
+		
+		.loginbox h1{width: 100%; height: 40px; font-size: 28px; color: #ff9900; border-bottom: 1px solid #ff9900; padding-left: 20px;
+						box-sizing: border-box; margin-bottom: 30px;}
+						
+		#loginip, #loginport, #loginpw{width: 200px; height: 25px; border: 1px solid #999; box-sizing: border-box; margin-bottom: 10px;}
+		
+		.labelip{font-size: 14px; color:#666; margin-left: 15px; margin-right: 22px;}
+		.labelport, .labelpw{font-size: 14px; color:#666; margin-left: 15px; margin-right: 8px;}
+		
+		.btnwrap{width: 100%; text-align: center;}
+		.btnwrap label{position:absolute; left: -999em;}
+		#loginbtn{width:129px; height: 35px; border: none; background-color: #ff9900; border-radius: 3px; color: #fff; font-size: 14px; font-weight: bold; position: relative; top: 1px;}
+	</style>
+	<script src ="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+	<script>
+		var ws=0;
+		var ws_text=0;
+		var ip="";
+		var port="";
+		var dirList = new Array();
+		var fileList = new Array();
+		function ws_connect(){
+			ip = document.getElementById('loginip').value;
+			port = document.getElementById('loginport').value;
+			text_port = port*1;
+			text_port += 1;
+			text_port+="";
+			ws_text = new WebSocket("ws://"+ip+":"+text_port);
+			//text용 웹소켓이 접속되면 접속되는 함수
+			
+			ws_text.onopen = function(message){
+				var pwd = document.getElementById('loginpw').value;
+				sendMessage("password",pwd);
+			};
+			ws_text.onmessage = function(message){
+				
+				var parsed_data = JSON.parse(message.data);
+				if(parsed_data.pwd==="correct"){
+					alert("기능 페이지로 이동합니다");
+					location.href="Index.html";
+				}
+				else if(parsed_data.pwd==="wrong"){
+					alert("비밀번호가 틀렸습니다");
+					disconnect();
+				}
+			};
+
+			function disconnect(){
+				ws_text.close();
+			}
+		}
+		function sendMessage(kind, message){
+			var msg ={
+				kinds : kind,
+				text : message
+			};
+
+			json_msg = JSON.stringify(msg);
+			
+			ws_text.send(json_msg);
+		};
+		
+		</script>
+</head>
+<body>
+	<div class="loginbox">
+		<h1>로그인</h1>
+		<form action="#">
+			<label for="loginip" class="labelip">IP주소</label>
+			<input type="text" id="loginip" value="192.168.1.18"><br/>
+			<label for="loginport" class="labelport">포트번호</label>
+			<input type="text" id="loginport" value="8080"><br/>
+			<label for="loginpw" class="labelpw">비밀번호</label>
+			<input type="password" id="loginpw"><br/>
+			<div class="btnwrap">
+				<!-- <input id="loginbtn" onclick="location.href='Index.html'" value="로그인" type="button"></input> -->
+				<input id="loginbtn" onclick="ws_connect()" value="로그인" type="button"></input>
+				<!-- <button id="loginbtn" onclick="ws_connect()">로그인</button> -->
+				<label for="loginbtn">로그인버튼</label>
+			</div>
+		</form>
+	</div>
+	
+	<!-- 안내 text 박스. -->
+	<!-- <input id="ipArea" type="text" placeholder="ip address" value="192.168.1.18"></input> -->
+	<!-- <input id="portArea" type="text" placeholder="port number" value="8080"></input> -->
+	
+	<!-- <!-- -->
+	<!-- <input id="ipArea" type="text" value="192.168.1.25"></input> -->
+	<!-- <input id="portArea" type="text" value="9999"></input>-->
+	<!-- <button id="connect_btn" onclick="ws_connect()">Connect</button> -->
+
+</body>
+</html>

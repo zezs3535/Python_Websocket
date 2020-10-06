@@ -130,7 +130,7 @@ async def text_accept(websocket, path):
         data = await websocket.recv();#받는 데이터는 json형태(kinds, text)
         
         json_data = json.loads(data)#받은 데이터를 json으로 변환
-        
+        print(json_data)
         #..디렉토리 클릭
         if json_data['kinds']=='chdir' and json_data['text']=='..' and os.getcwd() in available_drives :
             json_dirList = json.dumps({"kinds": "directory", "list": available_drives})
@@ -356,6 +356,14 @@ async def text_accept(websocket, path):
             json_fileList = json.dumps({"kinds": "filelist", "list": fileList})
             await websocket.send("{}".format(json_dirList));
             await websocket.send("{}".format(json_fileList));
+
+        elif json_data['kinds']=='password':
+            if json_data['text']=='1234':
+                answer=json.dumps({"pwd" : "correct"})
+                await websocket.send("{}".format(answer))
+            else:
+                answer=json.dumps({"pwd" : "wrong"})
+                await websocket.send("{}".format(answer))
             
 def network_info():
     host = socket.gethostname()
