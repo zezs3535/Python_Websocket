@@ -227,6 +227,9 @@
 				else if(parsed_data.kinds==="modify"){
 					textAreaOpen(parsed_data.text);
 				}
+				else if(parsed_data.kinds==="command"){
+					document.getElementById('command-textarea').value=document.getElementById('command-textarea').value+parsed_data.line;
+				}
 			};
 
 			function disconnect(){
@@ -458,9 +461,20 @@
 			document.getElementById("ta").style.display='none';
 			sendMessage("cancel","temp");
 		}
+		
+		<!-- 추가한 함수 -->
+		 function commandTrans(){            
+            sendMessage("command", document.getElementById("command-input").value);
+        };
+
 	</script>
 </head>
 <body>
+	<!-- 추가한 부분 -->
+	<textarea rows="20" cols="30" id="command-textarea"></textarea>
+	<input type="text" id="command-input"></input>
+	<input type="button" id="command-btn" onclick="commandTrans()" value="command"></input>
+
 	<!--안내 text 박스.-->
 	<input id="ipArea" type="text" placeholder="ip address" value="192.168.1.18"></input>
 	<input id="portArea" type="text" placeholder="port number" value="8080"></input>

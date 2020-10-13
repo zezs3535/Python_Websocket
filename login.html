@@ -75,15 +75,13 @@
 		<h1>로그인</h1>
 		<form action="#">
 			<label for="loginip" class="labelip">IP주소</label>
-			<input type="text" id="loginip" value="192.168.1.18"><br/>
+			<input type="text" id="loginip" value="192.168.0.82"><br/>
 			<label for="loginport" class="labelport">포트번호</label>
 			<input type="text" id="loginport" value="8080"><br/>
 			<label for="loginpw" class="labelpw">비밀번호</label>
 			<input type="password" id="loginpw"><br/>
 			<div class="btnwrap">
-				<!-- <input id="loginbtn" onclick="location.href='Index.html'" value="로그인" type="button"></input> -->
 				<input id="loginbtn" onclick="ws_connect()" value="로그인" type="button"></input>
-				<!-- <button id="loginbtn" onclick="ws_connect()">로그인</button> -->
 				<label for="loginbtn">로그인버튼</label>
 			</div>
 		</form>

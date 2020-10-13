@@ -9,6 +9,8 @@ import sys;
 import json;
 import shutil
 import string
+import subprocess
+
 #기본 경로
 #os.chdir('D:')
 os.chdir('/')
@@ -364,6 +366,20 @@ async def text_accept(websocket, path):
             else:
                 answer=json.dumps({"pwd" : "wrong"})
                 await websocket.send("{}".format(answer))
+
+        elif json_data['kinds']=='command':
+            p = subprocess.Popen(json_data['text'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            stdout = []
+            print('1')
+            while True:
+                line = p.stdout.readline()
+                stdout.append(line)
+                json_commandResult = json.dumps({"kinds": "command", "line": line.decode('euc-kr')})
+                await websocket.send("{}".format(json_commandResult))
+                #f.write(line.decode('utf-8'))
+                if not line:
+                    break
+
             
 def network_info():
     host = socket.gethostname()
