@@ -4,6 +4,20 @@
     <meta charset="utf-8"/>
     <title></title>
 	<style>
+		*{margin: 0; padding: 0;}
+		.loginbox{width:330px; height:320px; border:1px solid #ccc; margin: 200px 38%; padding: 25px 15px; box-sizing: border-box;}
+		
+		.loginbox h1{width: 100%; height: 40px; font-size: 28px; color: #ff9900; border-bottom: 1px solid #ff9900; padding-left: 20px;
+						box-sizing: border-box; margin-bottom: 30px;}
+						
+		#loginip, #loginport, #loginpw{width: 200px; height: 25px; border: 1px solid #999; box-sizing: border-box; margin-bottom: 10px;}
+		
+		.labelip{font-size: 14px; color:#666; margin-left: 15px; margin-right: 22px;}
+		.labelport, .labelpw{font-size: 14px; color:#666; margin-left: 15px; margin-right: 8px;}
+		
+		.btnwrap{width: 100%; text-align: center;}
+		.btnwrap label{position:absolute; left: -999em;}
+		#loginbtn{width:129px; height: 35px; border: none; background-color: #ff9900; border-radius: 3px; color: #fff; font-size: 14px; font-weight: bold; position: relative; top: 1px;}
 		div{
 			float:left;
 		}
@@ -181,12 +195,9 @@
 		function ws_connect(){
 			
 			//text_port 는 입력된 port보다 1이 크다
-			var p = document.getElementById('list');
-				while(p.firstChild){
-					p.removeChild(p.firstChild);
-				}
-			ip = document.getElementById('ipArea').value;
-			port = document.getElementById('portArea').value;
+			
+			ip = document.getElementById('loginip').value;
+			port = document.getElementById('loginport').value;
 			text_port = port*1;
 			text_port += 1;
 			text_port+="";
@@ -194,12 +205,12 @@
 		
 			//text용 웹소켓이 접속되면 접속되는 함수
 			ws_text.onopen = function(message){
-				alert('connected');
+				var pwd = document.getElementById('loginpw').value;
+				sendMessage("password",pwd);
 			};
 			
 			ws_text.onclose=function(message){
 				alert('disconnected');
-				
 			};
 
 			//text용 웹소켓이 통신중 에러가 발생되면 호출되는 함수
@@ -207,7 +218,10 @@
 				alert('error occured...');
 				
 			};
-
+			var p = document.getElementById('list');
+			while(p.firstChild){
+				p.removeChild(p.firstChild);
+			}
 			//text용 웹소켓 서버로부터 메시지가 오면 호출되는 함수
 			ws_text.onmessage = function(message){
 				
@@ -217,7 +231,14 @@
 				var parsed_data = JSON.parse(message.data);
 				//alert(parsed_data.kinds, parsed_data.text);
 				//JSON 데이터의 kinds가 디렉토리이면
-				
+				if(parsed_data.pwd==="correct"){
+					alert("로그인 되었습니다");
+					document.getElementById('loginbox').style.display='none';
+				}
+				else if(parsed_data.pwd==="wrong"){
+					alert("비밀번호가 틀렸습니다");
+					disconnect();
+				}
 				if(parsed_data.kinds==="directory"){
 					make_div(parsed_data.list, "directory");
 				}
@@ -404,8 +425,6 @@
 				alert('file name is null');
 				return;
 			}
-			alert(document.getElementById("ta").value);
-			alert(document.getElementById("makefilenamearea").value);
 			sendMessage("makename", document.getElementById("makefilenamearea").value);
 			sendMessage("maketext", document.getElementById("ta").value)
 			document.getElementById("makefilenamearea").value = "";
@@ -470,18 +489,32 @@
 	</script>
 </head>
 <body>
+	<div class="loginbox" id="loginbox" style="display:'';">
+		<h1>로그인</h1>
+		<form action="#">
+			<label for="loginip" class="labelip">IP주소</label>
+			<input type="text" id="loginip" value="192.168.0.82"><br/>
+			<label for="loginport" class="labelport">포트번호</label>
+			<input type="text" id="loginport" value="8080"><br/>
+			<label for="loginpw" class="labelpw">비밀번호</label>
+			<input type="password" id="loginpw"><br/>
+			<div class="btnwrap">
+				<input id="loginbtn" onclick="ws_connect()" value="로그인" type="button"></input>
+				<label for="loginbtn">로그인버튼</label>
+			</div>
+		</form>
+	</div>
 	<!-- 추가한 부분 -->
+	<div style="display:none;">
 	<textarea rows="20" cols="30" id="command-textarea"></textarea>
 	<input type="text" id="command-input"></input>
 	<input type="button" id="command-btn" onclick="commandTrans()" value="command"></input>
-
+	</div>
+	<div id="connectFunc" style="display:none;">
 	<!--안내 text 박스.-->
 	<input id="ipArea" type="text" placeholder="ip address" value="192.168.1.18"></input>
 	<input id="portArea" type="text" placeholder="port number" value="8080"></input>
-	
-	<!--
-	<input id="ipArea" type="text" value="192.168.1.25"></input>
-	<input id="portArea" type="text" value="9999"></input>-->
+	</div>
 	<button id="connect_btn" onclick="ws_connect()">Connect</button>
 	<br/>
 	<input id="file" type="file">
@@ -490,8 +523,8 @@
 	<form>
 		<!-- 접속 종료 버튼 -->
 		<input onclick="disconnect()" value="Disconnect" type="button">
-		
 	</form>
+	</div>
 
 	<textarea id="ta" rows="20" cols="30" style="display:none;" onkeydown="if(event.keyCode==9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}"></textarea>
 	<form>
